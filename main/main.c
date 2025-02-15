@@ -32,7 +32,7 @@ void app_main(void)
         mma7361_read_3axes(&axis_x, &axis_y, &axis_z, mma7361_handle);
         
         vTaskDelay(3000/portTICK_PERIOD_MS);
-
+        
     }
     
 
