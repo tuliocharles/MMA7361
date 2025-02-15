@@ -7,6 +7,10 @@
 #include "esp_adc/adc_cali.h"
 #include "esp_adc/adc_cali_scheme.h"
 
+
+#define G15 800
+#define G60 206
+
 static const char *TAG = "MMA7361";
 
 typedef struct mma7361_t mma7361_t;
@@ -14,7 +18,11 @@ typedef struct mma7361_t mma7361_t;
 struct mma7361_t{
     adc_channel_t x_channel;
     adc_channel_t y_channel;
-    adc_channel_t z_channel; 
+    adc_channel_t z_channel;
+    int x_offset;
+    int y_offset;
+    int z_offset;
+    unsigned int cali; 
     gpio_num_t zero_g;
     gpio_num_t g_select;
     gpio_num_t self_test;
@@ -107,6 +115,9 @@ esp_err_t mma7361_new(mma7361_config_t *config, mma7361_handle_t *ret_ma7361){
     mma7361->g_select   = config->g_select;
     mma7361->self_test  = config->self_test;
     mma7361->sleep      = config->sleep;
+    mma7361->x_offset  = config->x_offset;
+    mma7361->y_offset  = config->y_offset;
+    mma7361->z_offset  = config->z_offset;
     
     uint64_t gpio_pin_sel = (1ULL<<mma7361->g_select) |  (1ULL<<config->self_test) | (1ULL<<config->sleep);
 
@@ -121,16 +132,17 @@ esp_err_t mma7361_new(mma7361_config_t *config, mma7361_handle_t *ret_ma7361){
     gpio_config(&io_conf);
 
     gpio_pin_sel = (1ULL<<config->zero_g);
-
+    mma7361->cali = 800;
     io_conf.pin_bit_mask = gpio_pin_sel;
     io_conf.mode = GPIO_MODE_INPUT;
     io_conf.pull_up_en = 0;
     gpio_config(&io_conf);
 
     gpio_set_level(mma7361->g_select,0);
-    gpio_set_level(config->self_test,0);
-    gpio_set_level(config->sleep,1);  
-    
+    mma7361->cali = G15;
+    gpio_set_level(mma7361->self_test,0);
+    gpio_set_level(mma7361->sleep,1);  
+
     mma7361->adc1_handle = NULL;
     adc_oneshot_unit_init_cfg_t init_config1 = {
         .unit_id = ADC_UNIT_1,
@@ -170,16 +182,35 @@ void mma7361_read_3axes(int *axis_x, int *axis_y, int *axis_z, mma7361_handle_t 
     ESP_ERROR_CHECK(adc_cali_raw_to_voltage(mma7361_handle->adc1_cali_handle, raw_axis_x, axis_x));
     ESP_ERROR_CHECK(adc_cali_raw_to_voltage(mma7361_handle->adc1_cali_handle, raw_axis_y, axis_y));
     ESP_ERROR_CHECK(adc_cali_raw_to_voltage(mma7361_handle->adc1_cali_handle, raw_axis_z, axis_z));
-            
-    ESP_LOGI(TAG, "Axis x: %.1f",(float)((*axis_x)-1650)/800);
-    ESP_LOGI(TAG, "Axis Y: %.1f",(float)((*axis_y)-1850)/800);
-    ESP_LOGI(TAG, "Axis z: %.1f",(float)((*axis_z)-1350)/800);
+    
+    *axis_x = (int)(((float)(*axis_x)-mma7361_handle->x_offset)/((float)mma7361_handle->cali/1000));
+    *axis_y = (int)(((float)(*axis_y)-mma7361_handle->y_offset)/((float)mma7361_handle->cali/1000));
+    *axis_z = (int)(((float)(*axis_z)-mma7361_handle->z_offset)/((float)mma7361_handle->cali/1000));
+    ESP_LOGI(TAG, "x: %.d, Y: %d, z: %d",*axis_x,*axis_y,*axis_z);
+    
 }
 
-void mma7361_del(mma7361_handle_t mma7361_handle)
+esp_err_t mma7361_del(mma7361_handle_t mma7361_handle)
 {
-    ESP_RETURN_ON_FALSE(pid, ESP_ERR_INVALID_ARG, TAG, "invalid argument");
-    free(pid);
+    ESP_RETURN_ON_FALSE(mma7361_handle, ESP_ERR_INVALID_ARG, TAG, "invalid argument");
+    free(mma7361_handle);
     return ESP_OK; 
+}
+
+void mma7361_gselect(uint32_t value, mma7361_handle_t mma7361_handle){
+    gpio_set_level(mma7361_handle->g_select,value);
+    mma7361_handle->cali = (!value) ? G15 : G60;
+    ESP_LOGI(TAG, "G SELECT GAIN: %d", mma7361_handle->cali);
 
 }
+
+void mma7361_selftest(uint32_t value, mma7361_handle_t mma7361_handle){
+    gpio_set_level(mma7361_handle->self_test,value);
+    ESP_LOGI(TAG, "SELF TEST: %s", !value ? "ON" : "OFF");
+}
+
+void mma7361_sleep(uint32_t value, mma7361_handle_t mma7361_handle){
+    gpio_set_level(mma7361_handle->sleep,value);
+    ESP_LOGI(TAG, "SLEEP: %s", !value ? "ON" : "OFF");  
+}
+
