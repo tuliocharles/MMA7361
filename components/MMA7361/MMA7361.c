@@ -193,7 +193,11 @@ void mma7361_read_3axes(int *axis_x, int *axis_y, int *axis_z, mma7361_handle_t 
 esp_err_t mma7361_del(mma7361_handle_t mma7361_handle)
 {
     ESP_RETURN_ON_FALSE(mma7361_handle, ESP_ERR_INVALID_ARG, TAG, "invalid argument");
+    
+    adc_calibration_deinit(mma7361_handle->adc1_cali_handle);
+    free(mma7361_handle->adc1_handle);
     free(mma7361_handle);
+    ESP_LOGI(TAG, "mma7361 has been deleted!");
     return ESP_OK; 
 }
 
@@ -206,7 +210,7 @@ void mma7361_gselect(uint32_t value, mma7361_handle_t mma7361_handle){
 
 void mma7361_selftest(uint32_t value, mma7361_handle_t mma7361_handle){
     gpio_set_level(mma7361_handle->self_test,value);
-    ESP_LOGI(TAG, "SELF TEST: %s", !value ? "ON" : "OFF");
+    ESP_LOGI(TAG, "SELF TEST: %s", value ? "ON" : "OFF");
 }
 
 void mma7361_sleep(uint32_t value, mma7361_handle_t mma7361_handle){
