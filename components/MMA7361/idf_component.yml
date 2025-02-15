@@ -1,0 +1,6 @@
+name: ESP-MMA7361
+version: "0.2.0"
+description: acelerometer MMA7361
+url: https://github.com/tuliocharles/MMA7361
+dependencies:
+  idf: ">=5.0"
