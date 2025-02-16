@@ -1,8 +1,8 @@
 name: ESP-MMA7361
 version: "0.0.0"
 description: aMMA7361 - Accelerometer
-git: https://github.com/tuliocharles/MMA7361.git
-path: components/MMA7361 
+repository: https://github.com/tuliocharles/MMA7361.git
+repository-path: components/MMA7361 
 
 dependencies:
   idf: ">=5.0"
