@@ -5,4 +5,4 @@ repository: https://github.com/tuliocharles/MMA7361.git
 repository-path: components/MMA7361 
 
 dependencies:
-  idf: "5.4"
+  idf: ">=4.4"
