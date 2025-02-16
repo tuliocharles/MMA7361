@@ -1,5 +1,5 @@
 name: ESP-MMA7361
-version: "0.0.0"
+version: "0.0.10"
 description: MMA7361 - Accelerometer
 repository: https://github.com/tuliocharles/MMA7361.git
 repository-path: components/MMA7361
