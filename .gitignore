@@ -4,3 +4,5 @@ sdkconfig.old
 .devcontainer/
 .vscode/
 dist/
+dependencies.lock
+
