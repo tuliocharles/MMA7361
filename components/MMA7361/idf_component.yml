@@ -1,8 +1,8 @@
 name: ESP-MMA7361
-version: "0.0.11"
-description: MMA7361 Accelerômetro
-url: https://github.com/tuliocharles/MMA7361
+version: "0.0.12"
+description: "MMA7361 Accelerômetro"
+url: "https://github.com/tuliocharles/MMA7361"
 repository: https://github.com/tuliocharles/MMA7361.git
 repository-path: components/MMA7361
 dependencies:
-  idf: ">=5.0"
+  idf: ">=5.0.0"
